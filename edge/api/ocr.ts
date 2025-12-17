@@ -19,7 +19,7 @@ export default {
 
       const { image, side = "face" } = body ?? {};
 
-      if (!image) {
+      if (typeof image !== "string" || !image.trim()) {
         return json({ error: "Image is required" }, { status: 400 });
       }
 
@@ -27,8 +27,11 @@ export default {
         return json({ error: "Invalid side" }, { status: 400 });
       }
 
-      // 移除可能的 base64 头部 (data:image/jpeg;base64,)
-      const base64Image = image.replace(/^data:image\/\w+;base64,/, "");
+      const rawImage = image.trim();
+      let imageForUpstream = rawImage;
+      if (rawImage.startsWith("data:image/")) {
+        imageForUpstream = rawImage.replace(/^data:image\/\w+;base64,/, "");
+      }
 
       // 获取 AppCode (假设环境变量名为 ALIYUN_OCR_APPCODE)
       // 注意：在本地开发时可能需要 mock env，或者在 vite config 里注入
@@ -44,6 +47,8 @@ export default {
       const aliyunUrl =
         env?.ALIYUN_OCR_URL || "https://cardnumber.market.alicloudapi.com/rest/160601/ocr/ocr_idcard.json";
 
+      const configure = JSON.stringify({ side });
+
       const response = await fetch(aliyunUrl, {
         method: "POST",
         headers: {
@@ -52,8 +57,8 @@ export default {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          image: base64Image,
-          configure: { side }, // 修复：必须是 JSON 对象，不是 JSON 字符串
+          image: imageForUpstream,
+          configure,
         }),
       });
 

@@ -53,6 +53,16 @@ const loading = ref(false);
 const result = ref<any>(null);
 const error = ref('');
 
+const readJsonOrText = async (response: Response) => {
+  const text = await response.text();
+  if (!text) return { json: null as any, text: '' };
+  try {
+    return { json: JSON.parse(text) as any, text };
+  } catch {
+    return { json: null as any, text };
+  }
+};
+
 const handleFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
@@ -88,10 +98,21 @@ const uploadAndRecognize = async () => {
       }),
     });
 
-    const data = await response.json();
+    const parsed = await readJsonOrText(response);
+    const data = parsed.json;
 
     if (!response.ok) {
-      throw new Error(data.error || '识别请求失败');
+      const message =
+        data?.error ||
+        data?.message ||
+        parsed.text ||
+        `识别请求失败 (${response.status})`;
+      throw new Error(message);
+    }
+
+    if (data == null) {
+      const preview = parsed.text ? parsed.text.slice(0, 200) : '';
+      throw new Error(preview ? `服务返回非 JSON: ${preview}` : '服务返回非 JSON');
     }
 
     result.value = data;

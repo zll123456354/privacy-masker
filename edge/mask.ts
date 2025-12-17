@@ -3,8 +3,7 @@ export async function onRequest({ request }: { request: Request }) {
     return new Response("Method Not Allowed", { status: 405 });
   }
 
-  const body = (await request.json()) as { text?: string };
-  const text = typeof body.text === "string" ? body.text : "";
+  const { text = "" } = await request.json();
 
   const masked = text
     .replace(/\d{11}/g, (m) => m.slice(0, 3) + "****" + m.slice(7))
@@ -15,8 +14,4 @@ export async function onRequest({ request }: { request: Request }) {
   return new Response(JSON.stringify({ result: masked }), {
     headers: { "Content-Type": "application/json" },
   });
-}
-
-export default async function handler(request: Request) {
-  return onRequest({ request });
 }

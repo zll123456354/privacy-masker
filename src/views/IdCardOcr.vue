@@ -73,7 +73,13 @@ const handleFileChange = (event: Event) => {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      base64Image.value = e.target?.result as string;
+      const loaded = e.target?.result;
+      if (typeof loaded !== 'string' || !loaded) {
+        error.value = '读取图片失败';
+        base64Image.value = '';
+        return;
+      }
+      base64Image.value = loaded;
     };
     reader.readAsDataURL(file.value);
   }
@@ -87,13 +93,18 @@ const uploadAndRecognize = async () => {
   result.value = null;
 
   try {
+    const imagePayload =
+      typeof base64Image.value === 'string' && base64Image.value.startsWith('data:image/')
+        ? base64Image.value.replace(/^data:image\/\w+;base64,/, '')
+        : base64Image.value;
+
     const response = await fetch('/api/ocr', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        image: base64Image.value,
+        image: imagePayload,
         side: side.value,
       }),
     });

@@ -7,6 +7,16 @@ export default {
       return new Response(JSON.stringify(body), { ...init, headers });
     };
 
+    const readEnv = (key: string) => {
+      const fromEnv = env?.[key];
+      if (typeof fromEnv === "string" && fromEnv.trim()) return fromEnv.trim();
+
+      const fromProcess = (globalThis as any)?.process?.env?.[key];
+      if (typeof fromProcess === "string" && fromProcess.trim()) return fromProcess.trim();
+
+      return undefined;
+    };
+
     if (request.method !== "POST") return json({ error: "Method Not Allowed" }, { status: 405 });
 
     try {
@@ -35,7 +45,7 @@ export default {
 
       // 获取 AppCode (假设环境变量名为 ALIYUN_OCR_APPCODE)
       // 注意：在本地开发时可能需要 mock env，或者在 vite config 里注入
-      const appCode = env?.ALIYUN_OCR_APPCODE;
+      const appCode = readEnv("ALIYUN_OCR_APPCODE");
 
       if (!appCode || appCode === "YOUR_APP_CODE_HERE") {
         return json(
@@ -45,7 +55,7 @@ export default {
       }
 
       const aliyunUrl =
-        env?.ALIYUN_OCR_URL || "https://cardnumber.market.alicloudapi.com/rest/160601/ocr/ocr_idcard.json";
+        readEnv("ALIYUN_OCR_URL") || "https://cardnumber.market.alicloudapi.com/rest/160601/ocr/ocr_idcard.json";
 
       const configure = JSON.stringify({ side });
 

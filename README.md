@@ -28,3 +28,6 @@ Edge Privacy Masker 是一个基于阿里云 ESA Pages 边缘计算的隐私脱�
 - 安装依赖：`npm install`
 - 启动开发：`npm run dev`
 - 构建：`npm run build`
+
+本项目由阿里云ESA提供加速、计算和保护
+![alt text](image.png)

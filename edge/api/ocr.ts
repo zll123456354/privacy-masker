@@ -31,12 +31,12 @@ export default {
       const response = await fetch(aliyunUrl, {
         method: "POST",
         headers: {
-          "Authorization": `APPCODE ${appCode}`,
+          Authorization: `APPCODE ${appCode}`,
           "Content-Type": "application/json; charset=UTF-8",
         },
         body: JSON.stringify({
           image: base64Image,
-          configure: JSON.stringify({ side }),
+          configure: { side }, // 修复：必须是 JSON 对象，不是 JSON 字符串
         }),
       });
 

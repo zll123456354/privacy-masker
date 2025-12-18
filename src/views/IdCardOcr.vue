@@ -455,24 +455,28 @@ const formattedResult = computed(() => {
 
 /* 脱敏相关样式 */
 .mask-section {
-  margin: 20px 0;
-  padding: 15px;
+  margin: 30px 0 20px;
+  padding: 20px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .hint {
   color: #666;
   font-size: 0.9em;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .canvas-wrapper {
-  margin: 10px 0;
+  margin: 15px auto;
   border: 1px solid #eee;
   overflow: hidden;
   max-width: 100%;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: #f0f0f0;
 }
 
 .canvas-wrapper canvas {
@@ -483,6 +487,13 @@ const formattedResult = computed(() => {
 
 .download-btn {
   background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
   margin-top: 10px;
 }
 
@@ -503,44 +514,5 @@ pre {
   border-radius: 4px;
   text-align: left;
 }
-</style>  cursor: pointer;
-  font-size: 16px;
-}
-
-.btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.error-box {
-  background-color: #fee;
-  border: 1px solid #fcc;
-  padding: 10px;
-  border-radius: 4px;
-  color: #c00;
-}
-
-.result-box {
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  padding: 15px;
-  border-radius: 4px;
-}
-
-.result-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.label {
-  font-weight: bold;
-  text-align: right;
-  color: #555;
-}
-
-.value {
-  text-align: left;
-}
 </style>
+

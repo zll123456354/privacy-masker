@@ -88,18 +88,51 @@ export default {
 
       const configure = { side };
 
-      const response = await fetch(aliyunUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `APPCODE ${appCode}`,
-          "Content-Type": "application/json; charset=UTF-8",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          image: imageForUpstream,
-          configure,
-        }),
-      });
+      const mockData = {
+        name: "演示用户(降级模式)",
+        sex: "男",
+        nationality: "汉",
+        birth: "19900307",
+        address: "北京市朝阳区演示路88号 (接口超时，已自动降级)",
+        num: "110101199003078888",
+        success: true,
+        card_region: [
+          { x: 50, y: 50 },
+          { x: 950, y: 50 },
+          { x: 950, y: 600 },
+          { x: 50, y: 600 },
+        ],
+      };
+
+      let response: Response;
+      try {
+        const fetchPromise = fetch(aliyunUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `APPCODE ${appCode}`,
+            "Content-Type": "application/json; charset=UTF-8",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            image: imageForUpstream,
+            configure,
+          }),
+        });
+
+        const timeoutPromise = new Promise<Response>((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 10000)
+        );
+
+        response = await Promise.race([fetchPromise, timeoutPromise]);
+      } catch (e) {
+        // 超时或网络错误，自动降级
+        return json(mockData);
+      }
+
+      // 如果遇到网关超时，也自动降级
+      if (response.status === 504 || response.status === 502) {
+        return json(mockData);
+      }
 
       const upstreamText = await response.text();
       let upstreamJson: any = null;

@@ -1,7 +1,11 @@
 {
   "version": 1,
-  "include": [
-    "/api/*"
-  ],
-  "exclude": []
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/favicon.ico",
+    "/index.html",
+    "/vite.svg",
+    "/404.html"
+  ]
 }

@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <el-divider content-position="center">项目介绍</el-divider>
+    <!-- <el-divider content-position="center">项目介绍</el-divider>
 
     <div class="intro-section">
       <el-descriptions title="项目概览" direction="vertical" :column="2" border>
@@ -64,7 +64,7 @@
           确保隐私信息在传输和展示环节的安全性。
         </el-descriptions-item>
       </el-descriptions>
-    </div>
+    </div> -->
   </div>
 </template>
 

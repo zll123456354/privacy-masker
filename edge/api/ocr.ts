@@ -61,39 +61,30 @@ export default {
         imageForUpstream = rawImage.replace(/^data:image\/\w+;base64,/, "");
       }
 
-      // 获取 AppCode (假设环境变量名为 ALIYUN_OCR_APPCODE)
-      // 注意：在本地开发时可能需要 mock env，或者在 vite config 里注入
-      const appCode = readEnv("ALIYUN_OCR_APPCODE");
+      // 获取 AppCode
+      // 调试发现 ESA 运行时未能正确注入环境变量。
+      // 为了快速跑通，请直接将您的 AppCode 填在下面的引号中。
+      // 例如：const appCode = "a1b2c3d4e5f6...";
+      let appCode = readEnv("ALIYUN_OCR_APPCODE");
 
+      // TODO: 如果环境变量不生效，请在此处直接填入您的 AppCode
       if (!appCode || appCode === "YOUR_APP_CODE_HERE") {
-        // 收集调试信息
-        const envKeys = env ? Object.keys(env) : [];
-        const processEnvKeys =
-          typeof process !== "undefined" && process.env
-            ? Object.keys(process.env)
-            : [];
-        const globalProcessEnvKeys = (globalThis as any)?.process?.env
-          ? Object.keys((globalThis as any).process.env)
-          : [];
+        appCode = "da8b099d52fb495ebad042db6cf8da1a"; // <--- 请在这里填入您的阿里云 AppCode
+      }
 
+      if (!appCode) {
         return json(
           {
             error:
-              "AppCode is missing. Please set ALIYUN_OCR_APPCODE in ESA Console.",
-            debug: {
-              envKeys,
-              processEnvKeys,
-              globalProcessEnvKeys,
-              message:
-                "Please check if 'ALIYUN_OCR_APPCODE' is in the keys list above.",
-            },
+              "AppCode is missing. Please edit edge/api/ocr.ts and fill in your AppCode.",
           },
           { status: 500 }
         );
       }
 
       const aliyunUrl =
-        readEnv("ALIYUN_OCR_URL") || "https://cardnumber.market.alicloudapi.com/rest/160601/ocr/ocr_idcard.json";
+        readEnv("ALIYUN_OCR_URL") ||
+        "https://cardnumber.market.alicloudapi.com/rest/160601/ocr/ocr_idcard.json";
 
       const configure = { side };
 
@@ -120,7 +111,8 @@ export default {
         }
       }
 
-      const upstreamTextPreview = upstreamText.length > 2000 ? upstreamText.slice(0, 2000) : upstreamText;
+      const upstreamTextPreview =
+        upstreamText.length > 2000 ? upstreamText.slice(0, 2000) : upstreamText;
 
       if (!response.ok) {
         return json(
@@ -145,7 +137,6 @@ export default {
       }
 
       return json(upstreamJson);
-
     } catch (err: any) {
       return json({ error: err?.message || String(err) }, { status: 500 });
     }

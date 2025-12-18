@@ -2,32 +2,26 @@ export default {
   async fetch(request: Request, env: any) {
     const json = (body: unknown, init: ResponseInit = {}) => {
       const headers = new Headers(init.headers);
-      if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json; charset=utf-8");
-      if (!headers.has("Cache-Control")) headers.set("Cache-Control", "no-store");
+      if (!headers.has("Content-Type"))
+        headers.set("Content-Type", "application/json; charset=utf-8");
+      if (!headers.has("Cache-Control"))
+        headers.set("Cache-Control", "no-store");
       return new Response(JSON.stringify(body), { ...init, headers });
     };
 
+    // 环境变量读取逻辑
     const readEnv = (key: string) => {
-      // 优先尝试从全局 process.env 读取 (ESA 环境)
-      // 注意：ESA 中 process 可能不存在，或 process.env 是一个特殊对象
+      // 1. 尝试从 env 参数读取 (Edge Routine 标准方式)
+      // 在 ESA Edge Routine 中，环境变量通常作为 fetch 函数的第二个参数 env 传入
+      const fromEnv = env?.[key];
+      if (typeof fromEnv === "string" && fromEnv.trim()) return fromEnv.trim();
+
+      // 2. 尝试从全局 process.env 读取 (兼容某些构建注入场景)
       try {
         if (typeof process !== "undefined" && process.env && process.env[key]) {
           const val = process.env[key];
           if (typeof val === "string" && val.trim()) return val.trim();
         }
-      } catch (e) {
-        // 忽略 process 访问错误
-      }
-
-      // 其次尝试从 env 参数读取 (Cloudflare Workers 等环境)
-      const fromEnv = env?.[key];
-      if (typeof fromEnv === "string" && fromEnv.trim()) return fromEnv.trim();
-
-      // 最后尝试兜底 globalThis.process
-      try {
-        const fromGlobalProcess = (globalThis as any)?.process?.env?.[key];
-        if (typeof fromGlobalProcess === "string" && fromGlobalProcess.trim())
-          return fromGlobalProcess.trim();
       } catch (e) {
         // 忽略
       }
@@ -35,7 +29,8 @@ export default {
       return undefined;
     };
 
-    if (request.method !== "POST") return json({ error: "Method Not Allowed" }, { status: 405 });
+    if (request.method !== "POST")
+      return json({ error: "Method Not Allowed" }, { status: 405 });
 
     try {
       let body: any;
@@ -62,21 +57,13 @@ export default {
       }
 
       // 获取 AppCode
-      // 调试发现 ESA 运行时未能正确注入环境变量。
-      // 为了快速跑通，请直接将您的 AppCode 填在下面的引号中。
-      // 例如：const appCode = "a1b2c3d4e5f6...";
-      let appCode = readEnv("ALIYUN_OCR_APPCODE");
+      const appCode = readEnv("ALIYUN_OCR_APPCODE");
 
-      // TODO: 如果环境变量不生效，请在此处直接填入您的 AppCode
       if (!appCode || appCode === "YOUR_APP_CODE_HERE") {
-        appCode = "da8b099d52fb495ebad042db6cf8da1a"; // <--- 请在这里填入您的阿里云 AppCode
-      }
-
-      if (!appCode) {
         return json(
           {
             error:
-              "AppCode is missing. Please edit edge/api/ocr.ts and fill in your AppCode.",
+              "AppCode is missing. Please set ALIYUN_OCR_APPCODE in ESA console or env.",
           },
           { status: 500 }
         );

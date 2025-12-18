@@ -66,8 +66,28 @@ export default {
       const appCode = readEnv("ALIYUN_OCR_APPCODE");
 
       if (!appCode || appCode === "YOUR_APP_CODE_HERE") {
+        // 收集调试信息
+        const envKeys = env ? Object.keys(env) : [];
+        const processEnvKeys =
+          typeof process !== "undefined" && process.env
+            ? Object.keys(process.env)
+            : [];
+        const globalProcessEnvKeys = (globalThis as any)?.process?.env
+          ? Object.keys((globalThis as any).process.env)
+          : [];
+
         return json(
-          { error: "AppCode is missing. Please set ALIYUN_OCR_APPCODE." },
+          {
+            error:
+              "AppCode is missing. Please set ALIYUN_OCR_APPCODE in ESA Console.",
+            debug: {
+              envKeys,
+              processEnvKeys,
+              globalProcessEnvKeys,
+              message:
+                "Please check if 'ALIYUN_OCR_APPCODE' is in the keys list above.",
+            },
+          },
           { status: 500 }
         );
       }

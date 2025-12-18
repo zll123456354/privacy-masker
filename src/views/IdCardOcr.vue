@@ -124,12 +124,17 @@ const selectedMasks = ref<string[]>([]);
 
 const maskDefinitions = {
   face: [
-    { label: '身份证号', value: 'id_num' },
+    { label: '姓名', value: 'name' },
+    { label: '性别', value: 'sex' },
+    { label: '民族', value: 'nationality' },
+    { label: '出生日期', value: 'birth' },
     { label: '住址', value: 'address' },
-    // { label: '姓名', value: 'name' }, // 暂未实现坐标
+    { label: '身份证号', value: 'id_num' },
+    { label: '头像', value: 'face_photo' },
   ],
   back: [
     { label: '有效期限', value: 'valid_date' },
+    { label: '签发机关', value: 'authority' },
   ]
 };
 
@@ -255,16 +260,39 @@ const generateMaskedImage = async () => {
       drawMosaic(pTL, pTR, pBR, pBL);
     };
 
-    if (side.value === 'face') {
-      if (selectedMasks.value.includes('id_num')) {
-        maskArea(0.34, 0.82, 0.63, 0.12);
+    // 坐标定义：[u, v, w, h] (相对于卡片区域的比例)
+    const maskCoordinates: Record<string, [number, number, number, number]> = {
+      // 人像面
+      name: [0.18, 0.10, 0.25, 0.13],
+      sex: [0.18, 0.23, 0.10, 0.10],
+      nationality: [0.39, 0.23, 0.20, 0.10],
+      birth: [0.18, 0.35, 0.45, 0.10],
+      address: [0.17, 0.47, 0.48, 0.33],
+      id_num: [0.33, 0.80, 0.62, 0.14],
+      
+      // 国徽面
+      authority: [0.38, 0.68, 0.45, 0.12],
+      valid_date: [0.40, 0.80, 0.55, 0.12]
+    };
+
+    // 处理常规字段
+    for (const key of selectedMasks.value) {
+      if (key === 'face_photo') continue; // 特殊处理头像
+      const coords = maskCoordinates[key];
+      if (coords) {
+        maskArea(...coords);
       }
-      if (selectedMasks.value.includes('address')) {
-        maskArea(0.17, 0.48, 0.60, 0.32);
-      }
-    } else {
-      if (selectedMasks.value.includes('valid_date')) {
-        maskArea(0.40, 0.80, 0.55, 0.12);
+    }
+
+    // 特殊处理头像（优先使用API返回的精确坐标）
+    if (side.value === 'face' && selectedMasks.value.includes('face_photo')) {
+      if (result.value.face_rect_vertices && result.value.face_rect_vertices.length === 4) {
+        const v = result.value.face_rect_vertices;
+        // 注意：API返回的顶点顺序可能不一定是 TL, TR, BR, BL，但 drawMosaic 只需要4个点围成的区域
+        drawMosaic(v[0], v[1], v[2], v[3]);
+      } else {
+        // 降级方案：使用相对坐标
+        maskArea(0.65, 0.10, 0.30, 0.60);
       }
     }
   };

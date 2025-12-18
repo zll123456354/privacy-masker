@@ -1,4 +1,6 @@
 // 提取自原 edge/api/ocr.ts 的逻辑
+import { APP_CODE } from "../env";
+
 async function handleOcrRequest(request: Request, env: any) {
   const json = (body: unknown, init: ResponseInit = {}) => {
     const headers = new Headers(init.headers);
@@ -10,6 +12,11 @@ async function handleOcrRequest(request: Request, env: any) {
 
   // 环境变量读取逻辑
   const readEnv = (key: string) => {
+    // 0. 优先使用构建时注入的变量 (edge/env.ts)
+    if (key === "ALIYUN_OCR_APPCODE" && APP_CODE) {
+      return APP_CODE;
+    }
+
     // 1. 尝试从 env 参数读取 (Edge Routine 标准方式)
     const fromEnv = env?.[key];
     if (typeof fromEnv === "string" && fromEnv.trim()) return fromEnv.trim();

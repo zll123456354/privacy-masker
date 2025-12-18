@@ -8,11 +8,29 @@ export default {
     };
 
     const readEnv = (key: string) => {
+      // 优先尝试从全局 process.env 读取 (ESA 环境)
+      // 注意：ESA 中 process 可能不存在，或 process.env 是一个特殊对象
+      try {
+        if (typeof process !== "undefined" && process.env && process.env[key]) {
+          const val = process.env[key];
+          if (typeof val === "string" && val.trim()) return val.trim();
+        }
+      } catch (e) {
+        // 忽略 process 访问错误
+      }
+
+      // 其次尝试从 env 参数读取 (Cloudflare Workers 等环境)
       const fromEnv = env?.[key];
       if (typeof fromEnv === "string" && fromEnv.trim()) return fromEnv.trim();
 
-      const fromProcess = (globalThis as any)?.process?.env?.[key];
-      if (typeof fromProcess === "string" && fromProcess.trim()) return fromProcess.trim();
+      // 最后尝试兜底 globalThis.process
+      try {
+        const fromGlobalProcess = (globalThis as any)?.process?.env?.[key];
+        if (typeof fromGlobalProcess === "string" && fromGlobalProcess.trim())
+          return fromGlobalProcess.trim();
+      } catch (e) {
+        // 忽略
+      }
 
       return undefined;
     };

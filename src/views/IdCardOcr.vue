@@ -81,7 +81,17 @@
           <h3>隐私脱敏预览</h3>
           <el-tag type="success" effect="dark">已自动打码</el-tag>
         </div>
-        <p class="hint">系统已自动识别并遮挡敏感区域（身份证号、地址），保障隐私安全。</p>
+        
+        <div class="mask-options">
+          <span class="label">打码区域：</span>
+          <el-checkbox-group v-model="selectedMasks" @change="generateMaskedImage">
+            <el-checkbox v-for="opt in currentMaskOptions" :key="opt.value" :label="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </div>
+
+        <p class="hint">系统已自动识别并遮挡敏感区域，您可以手动勾选需要打码的部位。</p>
         
         <div class="canvas-wrapper">
           <canvas ref="maskCanvas"></canvas>
@@ -109,6 +119,28 @@ const loading = ref(false);
 const result = ref<any>(null);
 const error = ref('');
 const maskCanvas = ref<HTMLCanvasElement | null>(null);
+
+const selectedMasks = ref<string[]>([]);
+
+const maskDefinitions = {
+  face: [
+    { label: '身份证号', value: 'id_num' },
+    { label: '住址', value: 'address' },
+    // { label: '姓名', value: 'name' }, // 暂未实现坐标
+  ],
+  back: [
+    { label: '有效期限', value: 'valid_date' },
+  ]
+};
+
+const currentMaskOptions = computed(() => {
+  return side.value === 'face' ? maskDefinitions.face : maskDefinitions.back;
+});
+
+// 切换正反面时，默认全选
+watch(side, () => {
+  selectedMasks.value = currentMaskOptions.value.map(o => o.value);
+}, { immediate: true });
 
 const readJsonOrText = async (response: Response) => {
   const text = await response.text();
@@ -224,10 +256,16 @@ const generateMaskedImage = async () => {
     };
 
     if (side.value === 'face') {
-      maskArea(0.34, 0.82, 0.63, 0.12);
-      maskArea(0.17, 0.48, 0.60, 0.32);
+      if (selectedMasks.value.includes('id_num')) {
+        maskArea(0.34, 0.82, 0.63, 0.12);
+      }
+      if (selectedMasks.value.includes('address')) {
+        maskArea(0.17, 0.48, 0.60, 0.32);
+      }
     } else {
-      maskArea(0.40, 0.80, 0.55, 0.12);
+      if (selectedMasks.value.includes('valid_date')) {
+        maskArea(0.40, 0.80, 0.55, 0.12);
+      }
     }
   };
   img.src = base64Image.value;
@@ -288,6 +326,16 @@ const uploadAndRecognize = async () => {
 
 const formattedResult = computed(() => {
   if (!result.value) return {};
+  
+  // 处理平铺结构的国徽面 (根据用户提供的真实响应结构)
+  if (result.value.issue && result.value.start_date && result.value.end_date) {
+      return {
+          "签发机关": result.value.issue,
+          "有效期": `${result.value.start_date} - ${result.value.end_date}`,
+      };
+  }
+
+  // 处理平铺结构的人像面
   if (result.value.name) {
       return {
           "姓名": result.value.name,
@@ -298,6 +346,8 @@ const formattedResult = computed(() => {
           "地址": result.value.address,
       };
   }
+
+  // 处理嵌套结构的人像面
   if (result.value.face) {
       const f = result.value.face;
       return {
@@ -309,6 +359,8 @@ const formattedResult = computed(() => {
           "地址": f.address,
       };
   }
+
+  // 处理嵌套结构的国徽面
   if (result.value.back) {
       const b = result.value.back;
       return {
@@ -316,7 +368,13 @@ const formattedResult = computed(() => {
           "有效期": `${b.start_date} - ${b.end_date}`,
       };
   }
-  return result.value;
+
+  // 兜底：过滤掉纯技术字段
+  const technicalFields = ['angle', 'card_region', 'config_str', 'request_id', 'success', 'is_fake'];
+  const filtered = { ...result.value };
+  technicalFields.forEach(field => delete filtered[field]);
+  
+  return Object.keys(filtered).length > 0 ? filtered : result.value;
 });
 
 const copyAllResults = () => {
@@ -385,6 +443,18 @@ const copyAllResults = () => {
   margin-top: 30px;
   padding-top: 20px;
   border-top: 1px dashed #eee;
+}
+
+.mask-options {
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+}
+
+.mask-options .label {
+  font-weight: bold;
+  margin-right: 15px;
+  color: #606266;
 }
 
 .mask-header {

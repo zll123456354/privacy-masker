@@ -75,7 +75,7 @@ export default {
       const aliyunUrl =
         readEnv("ALIYUN_OCR_URL") || "https://cardnumber.market.alicloudapi.com/rest/160601/ocr/ocr_idcard.json";
 
-      const configure = JSON.stringify({ side });
+      const configure = { side };
 
       const response = await fetch(aliyunUrl, {
         method: "POST",

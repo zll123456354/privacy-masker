@@ -16,27 +16,32 @@ export default {
       return ocrHandler.fetch(request, env);
     }
 
-    if (pathname !== "/api/mask" && pathname !== "/mask") {
-      return json({ error: "Not Found" }, { status: 404 });
+    if (pathname === "/api/mask" || pathname === "/mask") {
+      if (request.method !== "POST")
+        return json({ error: "Method Not Allowed" }, { status: 405 });
+
+      let body: any;
+      try {
+        body = (await request.json()) as any;
+      } catch {
+        return json({ error: "Invalid JSON body" }, { status: 400 });
+      }
+
+      const text = body?.text;
+      if (typeof text !== "string")
+        return json({ error: "Text is required" }, { status: 400 });
+
+      const masked = text
+        .replace(/\d{11}/g, (m: string) => m.slice(0, 3) + "****" + m.slice(7))
+        .replace(
+          /\d{17}[\dX]/g,
+          (m: string) => m.slice(0, 3) + "************" + m.slice(-4)
+        )
+        .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "***@***");
+
+      return json({ result: masked });
     }
 
-    if (request.method !== "POST") return json({ error: "Method Not Allowed" }, { status: 405 });
-
-    let body: any;
-    try {
-      body = (await request.json()) as any;
-    } catch {
-      return json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-
-    const text = body?.text;
-    if (typeof text !== "string") return json({ error: "Text is required" }, { status: 400 });
-
-    const masked = text
-      .replace(/\d{11}/g, (m: string) => m.slice(0, 3) + "****" + m.slice(7))
-      .replace(/\d{17}[\dX]/g, (m: string) => m.slice(0, 3) + "************" + m.slice(-4))
-      .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "***@***");
-
-    return json({ result: masked });
+    return json({ error: "Not Found" }, { status: 404 });
   },
 };

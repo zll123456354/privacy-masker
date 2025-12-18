@@ -79,7 +79,34 @@ const handleFileChange = (event: Event) => {
         base64Image.value = '';
         return;
       }
-      base64Image.value = loaded;
+
+      // 压缩图片
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1024;
+        const scaleSize = MAX_WIDTH / img.width;
+        
+        // 只有当图片宽度大于 MAX_WIDTH 时才压缩
+        if (scaleSize < 1) {
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+        } else {
+          canvas.width = img.width;
+          canvas.height = img.height;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          base64Image.value = loaded; // 回退到原始图片
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // 使用 JPEG 格式压缩，质量 0.8
+        base64Image.value = canvas.toDataURL('image/jpeg', 0.8);
+      };
+      img.src = loaded;
     };
     reader.readAsDataURL(file.value);
   }

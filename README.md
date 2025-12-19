@@ -77,6 +77,9 @@ npm run build
 └── vite.config.ts       # 集成 Edge Middleware 模拟
 ```
 
+## 示例网站
+- **[Edge Privacy Masker 示例](https://app.pvmasker.top/)
+
 ## 🤝 贡献
 本项目由阿里云 ESA 提供加速、计算和保护支持。
-![alt text](image-3.png)
+![alt text](image.png)

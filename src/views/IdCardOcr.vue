@@ -48,6 +48,17 @@
       </div>
     </el-card>
 
+    <el-card v-if="base64Image && !result" class="box-card">
+      <template #header>
+        <div class="card-header">
+          <span>上传预览</span>
+        </div>
+      </template>
+      <div class="preview-wrapper">
+        <img :src="base64Image" alt="身份证预览" class="preview-image" />
+      </div>
+    </el-card>
+
     <div v-if="error" class="error-box">
       <el-alert
         title="错误"
@@ -285,7 +296,7 @@ const generateMaskedImage = async () => {
     }
 
     // 特殊处理头像（优先使用API返回的精确坐标）
-    if (side.value === 'face' && selectedMasks.value.includes('face_photo')) {
+    if (side.value === 'face' && selectedMasks.value.indexOf('face_photo') !== -1) {
       if (result.value.face_rect_vertices && result.value.face_rect_vertices.length === 4) {
         const v = result.value.face_rect_vertices;
         // 注意：API返回的顶点顺序可能不一定是 TL, TR, BR, BL，但 drawMosaic 只需要4个点围成的区域
@@ -406,8 +417,9 @@ const formattedResult = computed(() => {
 });
 
 const copyAllResults = () => {
-  const text = Object.entries(formattedResult.value)
-    .map(([key, value]) => `${key}: ${value}`)
+  const obj = formattedResult.value as Record<string, any>;
+  const text = Object.keys(obj)
+    .map((key) => `${key}: ${obj[key]}`)
     .join('\n');
   
   navigator.clipboard.writeText(text).then(() => {
@@ -526,5 +538,22 @@ const copyAllResults = () => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.preview-wrapper {
+  margin: 0 auto 20px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 100%;
+  display: inline-block;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: #f5f7fa;
+}
+
+.preview-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 </style>

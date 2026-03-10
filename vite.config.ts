@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import cesium from 'vite-plugin-cesium';
 import path from "node:path";
 
 // 简单的 Edge 函数模拟中间件
@@ -83,7 +84,7 @@ const edgeMiddleware = () => {
 }
 
 export default defineConfig({
-  plugins: [vue(), edgeMiddleware()],
+  plugins: [vue(), edgeMiddleware(), cesium()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

@@ -24,7 +24,7 @@ onMounted(() => {
     timeline: false, // 时间线
     navigationHelpButton: false, // 导航帮助按钮
     // 使用 OpenStreetMap 作为底图
-    terrainProvider: Cesium.createWorldTerrain(),
+    terrainProvider: new Cesium.WorldTerrain(),
   });
 
   // 隐藏 Cesium logo
